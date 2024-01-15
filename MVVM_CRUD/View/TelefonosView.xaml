@@ -1,0 +1,139 @@
+﻿<Window x:Class="MVVM_DEMO.View.TelefonosView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MVVM_DEMO.View"
+        xmlns:i="clr-namespace:Microsoft.Xaml.Behaviors;assembly=Microsoft.Xaml.Behaviors"
+        xmlns:vr="clr-namespace:MVVM_DEMO.ValidationRules"
+        mc:Ignorable="d"
+        Title="TelefonosView" Height="500" Width="700">
+    <Window.Resources>
+        <ControlTemplate x:Key="ValidationErrorTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <AdornedElementPlaceholder
+                Grid.Column="0"
+                VerticalAlignment="Center" />
+                <Path
+                Grid.Column="1"
+                Width="12"
+                Height="12"
+                Margin="2,0,0,0"
+                VerticalAlignment="Center"
+                Data="M 50,0 L 100,50 L 50,100 L 0,50 z"
+                Fill="Red"
+                SnapsToDevicePixels="false"
+                Stretch="Uniform"
+                StrokeThickness="0"
+                UseLayoutRounding="True" />
+            </Grid>
+        </ControlTemplate>
+        <ControlTemplate x:Key="ValidationErrorTemplate2">
+            <StackPanel>
+                <Border BorderBrush="Red" BorderThickness="1">
+                    <!-- Placeholder for the TextBox itself -->
+                    <AdornedElementPlaceholder x:Name="AdornedElement"/>
+                </Border>
+                <Border Background="White" BorderBrush="Red" Padding="4" BorderThickness="1,0,1,1" HorizontalAlignment="Left">
+                    <ItemsControl ItemsSource="{Binding}" HorizontalAlignment="Left">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ErrorContent}" Foreground="Red"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </StackPanel>
+        </ControlTemplate>
+    </Window.Resources>
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding LoadCommand}"/>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+
+    <StackPanel Orientation="Vertical">
+        <StackPanel Height="210">
+            <DataGrid x:Name="DataGridTelefonos" AutoGenerateColumns="False"
+                   ItemsSource="{Binding Telefonos}" CanUserAddRows="False" Height="200" Margin="10" SelectedItem="{Binding Selected}"  >
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="SelectionChanged">
+                        <i:InvokeCommandAction Command="{Binding SelectedItemChangedCommand}"  CommandParameter="{Binding ElementName=DataGridTelefonos, Path=SelectedItem}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+                <DataGrid.Columns>
+                    <!-- <DataGridTextColumn Header="Name" Binding="{Binding Path=Id}" Visibility="Hidden"/> -->
+                    <DataGridTextColumn Header="Número" Binding="{Binding Path=Ntelefono}" Width="100"  IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Nombre" Binding="{Binding Path=Nombre}" Width="50"  IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Dirección" Binding="{Binding Path=Direccion}" Width="180" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Observaciones" Binding="{Binding Path=Observaciones}" Width="125" IsReadOnly="True"/>
+                    <DataGridTemplateColumn Width="50">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Editar" x:Name="ButtonEdit" CommandParameter="{Binding Path=Ntelefono}"
+                                        Command="{Binding Path=DataContext.ModificarCommand,RelativeSource={RelativeSource FindAncestor,AncestorType=Window}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Width="50">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Borrar" x:Name="ButtonDelete" CommandParameter="{Binding Path=Ntelefono}" 
+                                        Command="{Binding Path=DataContext.BorrarCommand, RelativeSource={RelativeSource FindAncestor,AncestorType=Window}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </StackPanel>
+        <GroupBox Header="Telefonos" Margin="10">
+            <Grid Height="125">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="125"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label Content="Número de teléfono" HorizontalAlignment="Left" VerticalContentAlignment="Center" Grid.Column="0" Grid.Row="0"/>
+                
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TextBoxNumber" Height="27" Margin="5"  Width="300" HorizontalAlignment="Left"
+                         Text="{Binding Ntelefono, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"  
+                         Validation.ErrorTemplate="{StaticResource ValidationErrorTemplate2}" />
+                
+                <Label Content="Nombre y Apellidos" HorizontalAlignment="Left" VerticalContentAlignment="Center" Grid.Row="1" Grid.Column="0"/>
+
+                <TextBox Grid.Row="1" Grid.Column="1" x:Name="TextBoxName" Height="27" Margin="5,6,0,5" Width="300" HorizontalAlignment="Left"
+                          Validation.ErrorTemplate="{StaticResource ValidationErrorTemplate2}">
+                    <TextBox.Text>
+                    <Binding Path="Nombre" UpdateSourceTrigger="PropertyChanged" >
+                        <!-- Establecemos la validation rule, con lo parámetros establecidos -->
+                        <Binding.ValidationRules>
+                                <vr:TelefonosValidationRule Min="2" Max="10"/>
+                            </Binding.ValidationRules>
+                    </Binding>
+                </TextBox.Text>
+                
+                </TextBox>
+                <Label Content="Dirección" HorizontalAlignment="Left" VerticalContentAlignment="Center" Grid.Row="2" Grid.Column="0" />
+                <TextBox Grid.Row="2" Grid.Column="1" x:Name="TextBoxAddress" Height="27" Text="{Binding Direccion, Mode=TwoWay}" Margin="5" Width="300" HorizontalAlignment="Left"/>
+                <Label Content="Observaciones" HorizontalAlignment="Left" VerticalContentAlignment="Center" Grid.Row="3" Grid.Column="0" />
+                <TextBox Grid.Row="3" Grid.Column="1" x:Name="TextBoxObs" Height="27" Text="{Binding Observaciones, Mode=TwoWay}" Margin="5" Width="300" HorizontalAlignment="Left"/>
+                <!--<TextBlock Grid.Row="1" Grid.Column="1" x:Name="TextBlockId" Visibility="Hidden" Text="{Binding Path=Telefono.Id, Mode=TwoWay}"/>-->
+            </Grid>
+        </GroupBox>
+        <StackPanel Height="40" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="ButtonInsert" Content="Insertar" Height="30" Width="80" Command="{Binding GuardarCommand}"/>
+            <Button x:Name="ButtonCancel" Content="Cancelar" Height="30" Width="80" Command="{Binding LimpiarCommand}" Margin="5,0,10,0"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
